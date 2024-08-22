@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Formatter with Colored Keys and Values</title>
+    <link
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        rel="stylesheet">
+    <style>
+        .container {
+            width: 100% !important;
+        }
+
+        .json-window {
+            height: 600px;
+            overflow: auto;
+            white-space: pre-wrap;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .json-key {
+            color: #0000FF;
+        }
+
+        .json-value {
+            color: #008000;
+        }
+
+        .json-string {
+            color: #A31515;
+        }
+
+        .copy-button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="m-5">
+        <h1 class="mb-4">JSON Formatter</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="jsonInput">Paste unformatted JSON here:</label>
+                    <textarea id="jsonInput" class="form-control" rows="10"
+                        placeholder="Paste unformatted JSON here..."></textarea>
+                </div>
+                <button class="btn btn-primary mt-2"
+                    onclick="formatJson()">Format JSON</button>
+            </div>
+            <div class="col-md-6">
+                <label for="formattedJson">Formatted JSON:</label>
+                <div id="formattedJson" class="json-window"></div>
+                <button class="btn btn-secondary copy-button"
+                    onclick="copyToClipboard()">Copy</button>
+                    <button class="btn btn-secondary copy-button"
+                        onclick="minifyJson()">Minify</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-value';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        function formatJson() {
+            const input = document.getElementById('jsonInput').value;
+            const output = document.getElementById('formattedJson');
+
+            try {
+                // Handle cases where JSON is stringified
+                let jsonString = input;
+
+                // Remove outer quotes if present
+                if (jsonString.startsWith('"') && jsonString.endsWith('"')) {
+                    jsonString = jsonString.slice(1, -1);
+                }
+
+                // Decode escaped characters
+                jsonString = jsonString.replace(/\\"/g, '"');
+
+                // Parse and format the JSON
+                const json = JSON.parse(jsonString);
+                const formatted = JSON.stringify(json, null, 2);
+                output.innerHTML = syntaxHighlight(formatted);
+            } catch (e) {
+                output.textContent = 'Invalid JSON. Please check your input.';
+            }
+        }
+
+        function minifyJson() {
+                const input = document.getElementById('jsonInput').value;
+                const output = document.getElementById('formattedJson');
+
+                try {
+                    // Handle cases where JSON is stringified
+                    let jsonString = input;
+
+                    // Remove outer quotes if present
+                    if (jsonString.startsWith('"') && jsonString.endsWith('"')) {
+                        jsonString = jsonString.slice(1, -1);
+                    }
+
+                    // Decode escaped characters
+                    jsonString = jsonString.replace(/\\"/g, '"');
+
+                    // Parse and minify the JSON
+                    const json = JSON.parse(jsonString);
+                    const minified = JSON.stringify(json);
+                    output.innerHTML = syntaxHighlight(minified);
+                } catch (e) {
+                    output.textContent = 'Invalid JSON. Please check your input.';
+                }
+            }
+
+        function copyToClipboard() {
+            const formattedJsonElement = document.getElementById('formattedJson');
+            const range = document.createRange();
+            range.selectNodeContents(formattedJsonElement);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            try {
+                document.execCommand('copy');
+                alert('Formatted JSON copied to clipboard!');
+            } catch (err) {
+                alert('Failed to copy text.');
+            }
+
+            // Clean up the selection
+            selection.removeAllRanges();
+        }
+    </script>
+</body>
+
+</html>
